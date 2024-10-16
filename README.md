@@ -4,18 +4,18 @@ yocli is a command-line interface (CLI) tool designed to simplify your developme
 
 ## Table of Contents
 
-- Features
-- Installation
-- Configuration
-- Usage
-  - Interactive Menu Example
-  - How to Use
-- Advanced Usage
-  - Running Multiple SSH Connections
-  - Port Forwarding
-- Troubleshooting
-- License
-- Contributing
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [Interactive Menu Example](#interactive-menu-example)
+  - [How to Use](#how-to-use)
+- [Advanced Usage](#advanced-usage)
+  - [Running Multiple SSH Connections](#running-multiple-ssh-connections)
+  - [Port Forwarding](#port-forwarding)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+- [Contributing](#contributing)
 
 ## Features
 
