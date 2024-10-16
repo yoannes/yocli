@@ -1,117 +1,20 @@
 import curses
-import os
-import signal
-import socket
-import subprocess
 import sys
 import time
 
-import yaml
-
-# Load configuration from YAML file
-
-
-def load_yaml_config(file_path):
-    with open(file_path, 'r') as file:
-        return yaml.safe_load(file)
-
-# Function to check and free any ports that are already in use
+from ssh import create_ssh_tunnel_from_config
+from vscode import open_vscode
 
 
-def free_ports(ports_to_free):
-    for port in ports_to_free:
-        # Find the process using the port
-        result = subprocess.run(
-            ['lsof', '-i', f':{port}'], capture_output=True, text=True)
-        if result.stdout:
-            # Extract the PID from the output
-            lines = result.stdout.splitlines()
-            if len(lines) > 1:  # The first line is the header
-                pid = lines[1].split()[1]
-                # Kill the process
-                os.system(f'kill -9 {pid}')
-                print(f"Port {port} freed (killed process {pid}).")
-            else:
-                print(f"No process found using port {port}.")
-        else:
-            print(f"No process found using port {port}.")
-
-# Function to create and manage SSH tunnel connection
-
-
-def create_ssh_tunnel_from_config(ssh_config):
-    # Extract configuration
-    local_host = ssh_config['host-local']
-    remote_host = ssh_config['host']
-    user = ssh_config['user']
-    remote_port = ssh_config['port']
-    local_port = ssh_config.get('port-local', remote_port)
-    identity_file = os.path.expanduser(ssh_config['identity_file'])
-    ports = ssh_config['ports']
-
-    # Determine which host and port to use
-    if is_host_reachable(local_host, local_port):
-        host = local_host
-        port = local_port
-    else:
-        host = remote_host
-        port = remote_port
-
-    ssh_command = [
-        "ssh",
-        "-N",
-        "-i", identity_file,
-        f"{user}@{host}",
-        "-p", str(port)
-    ]
-
-    # Adding port forwarding details
-    for port_mapping in ports:
-        local_port, remote_port = port_mapping.split(":")
-        ssh_command += ["-L",
-                        f"127.0.0.1:{local_port}:127.0.0.1:{remote_port}"]
-
-    # Start the SSH process
-    try:
-        process = subprocess.Popen(ssh_command)
-        return process  # Return the process so we can manage it later
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
-# Helper function to check if host is reachable
-
-
-def is_host_reachable(host, port):
-    try:
-        # Try to connect to the host on the given port
-        socket.create_connection((host, port), timeout=5)
-        return True
-    except (socket.timeout, socket.error):
-        return False
-
-# Function to open VS Code for a specified project
-
-
-def open_vscode(commands):
-    try:
-        for command in commands:
-            subprocess.call(command, shell=True)
-    except Exception as e:
-        print(f"Error opening VS Code for project: {e}")
-
-# Interactive menu with curses
-
-
-def interactive_menu(stdscr, config):
+def interactive_menu(stdscr, config, active_processes):
+    """Interactive menu with curses"""
     curses.curs_set(0)  # Hide the cursor
     stdscr.clear()
-
-    active_processes = {}  # Dictionary to track active SSH connections
 
     # Dynamically generate the menu options from the config
     ssh_configs = config['services']['ssh']
     ssh_options = [f"Connect to {ssh['name']}" for ssh in ssh_configs]
+
     vscode_projects = config['services']['vscode']
     vscode_options = [
         f"VSCode: {project['name']}" for project in vscode_projects]
@@ -211,33 +114,12 @@ def interactive_menu(stdscr, config):
 
         stdscr.refresh()
 
-# Signal handler for graceful shutdown
 
-
-def signal_handler(sig, frame, active_processes):
+def signal_handler(active_processes):
+    """Signal handler for graceful shutdown"""
     for process in active_processes.values():
         if process.poll() is None:
             print("\nTerminating SSH connection...")
             process.terminate()
+
     sys.exit(0)
-
-
-if __name__ == "__main__":
-    config_path = 'config.yml'
-    config = load_yaml_config(config_path)
-
-    # Extract the ports from all SSH configs to free them
-    ports_to_free = []
-    for ssh in config['services']['ssh']:
-        ports_to_free.extend([int(port_mapping.split(":")[0])
-                             for port_mapping in ssh['ports']])
-    free_ports(ports_to_free)  # Free any ports that are already in use
-
-    # Register the signal handler to intercept Ctrl+C
-    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, {}))
-
-    # Use curses wrapper to run the interactive menu
-    try:
-        curses.wrapper(interactive_menu, config)
-    except KeyboardInterrupt:
-        print("\nProgram terminated by user.")

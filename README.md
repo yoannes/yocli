@@ -23,6 +23,15 @@ yocli is a command-line interface (CLI) tool designed to simplify your developme
 - **VSCode Project Launcher**: Launch your development projects in VSCode from a predefined list.
 - **Interactive Menu**: User-friendly CLI with an interactive interface for easy selection of SSH connections and VSCode projects.
 
+## Compatibility
+
+`yocli` is supported on:
+
+- **Linux**
+- **macOS**
+
+Note: `yocli` does **not support Windows**. If you are a Windows user, consider running `yocli` in a **Linux-based virtual machine** or **WSL (Windows Subsystem for Linux)**.
+
 ## Installation
 
 To install yocli as a command-line tool, follow these steps:
@@ -49,7 +58,7 @@ sudo mv yocli.py /usr/local/bin/yocli
 
 ## Configuration
 
-yocli uses a configuration file (config.yml) to define SSH connections and VSCode projects. Below is an example configuration:
+yocli uses a configuration file (yocli.yml) to define SSH connections and VSCode projects. Below is an example configuration:
 
 ```yaml
 services:
@@ -95,6 +104,24 @@ services:
   - user: The SSH user.
   - identity_file: The private key for authentication.
   - ports: List of port forwarding rules.
+
+## Command-Line Argument for Custom Configuration
+
+yocli allows you to specify a custom configuration file using the `--config` command-line argument. If no configuration file is specified, yocli will search for a configuration file in the following default locations:
+
+1. User's config directory: ~/.config/yocli/yocli.yml
+1. Home Directory: ~/.yocli.yml
+1. Current Directory: yocli.yml
+
+If no configuration file is found, yocli will raise an error prompting you to provide a valid configuration file.
+
+## Example Usage
+
+To run yocli with a custom configuration file:
+
+```bash
+yocli --config /path/to/custom_config.yml
+```
 
 ## Usage
 
