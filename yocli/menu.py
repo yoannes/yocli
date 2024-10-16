@@ -2,12 +2,28 @@ import curses
 import sys
 import time
 
-from ssh import create_ssh_tunnel_from_config
-from vscode import open_vscode
+from yocli.ssh import create_ssh_tunnel_from_config
+from yocli.vscode import open_vscode
+
+
+def init_curses_colors():
+    """Initialize color mode"""
+
+    if curses.has_colors():
+        curses.start_color()
+        try:
+            # Define some color pairs with adaptable background
+            # Cyan text with terminal default background
+            curses.init_pair(1, curses.COLOR_CYAN, -1)
+        except curses.error:
+            # Fallback to black background if default fails
+            curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
 
 def interactive_menu(stdscr, config, active_processes):
     """Interactive menu with curses"""
+
+    init_curses_colors()
     curses.curs_set(0)  # Hide the cursor
     stdscr.clear()
 
@@ -27,7 +43,7 @@ def interactive_menu(stdscr, config, active_processes):
         stdscr.clear()
         # Styling and Header
         stdscr.addstr(
-            0, 0, "Hi, welcome. Choose your action:\n", curses.A_BOLD)
+            0, 0, "Hi, welcome. Choose your actions:\n", curses.A_BOLD | curses.color_pair(1))
 
         # Space between sections
         stdscr.addstr(2, 0, "*SSH connections:*", curses.A_UNDERLINE)
