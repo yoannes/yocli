@@ -37,7 +37,7 @@ Note: `yocli` does **not support Windows**. If you are a Windows user, consider 
 To install yocli as a command-line tool, run the following command:
 
 ```bash
-pip install yocli
+pip install yocli-tools
 ```
 
 ## Configuration
