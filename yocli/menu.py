@@ -11,10 +11,11 @@ def interactive_menu(stdscr, config, active_processes):
     curses.curs_set(0)  # Hide the cursor
     stdscr.clear()
 
+    active_ports = {}  # Dictionary to track the ports forwarded by each active connection
+
     # Dynamically generate the menu options from the config
     ssh_configs = config['services']['ssh']
     ssh_options = [f"Connect to {ssh['name']}" for ssh in ssh_configs]
-
     vscode_projects = config['services']['vscode']
     vscode_options = [
         f"VSCode: {project['name']}" for project in vscode_projects]
@@ -33,23 +34,33 @@ def interactive_menu(stdscr, config, active_processes):
         ssh_row_start = 3
 
         # Display SSH connection options
+        row_offset = 0
         for idx, option in enumerate(ssh_options):
-            row = ssh_row_start + idx
-            if idx == current_row and idx in active_processes and active_processes[idx].poll() is None:
-                # Display "Connected to server" in green
+            row = ssh_row_start + row_offset
+            if idx in active_processes and active_processes[idx].poll() is None:
+                # Display "Connected to server" and show bound ports below
                 status_text = " (Connected)"
-                stdscr.addstr(
-                    row, 2, f"> {option}{status_text}", curses.A_REVERSE | curses.color_pair(1))
+                if idx == current_row:
+                    stdscr.addstr(
+                        row, 2, f"> {option}{status_text}", curses.A_REVERSE | curses.color_pair(1))
+                else:
+                    stdscr.addstr(
+                        row, 2, f"  {option}{status_text}", curses.color_pair(1))
+
+                # Display forwarded ports
+                ports = active_ports.get(idx, [])
+                for port in ports:
+                    row_offset += 1
+                    stdscr.addstr(row + row_offset, 4, f"    {port}")
             elif idx == current_row:
                 stdscr.addstr(row, 2, f"> {option}", curses.A_REVERSE)
-            elif idx in active_processes and active_processes[idx].poll() is None:
-                stdscr.addstr(
-                    row, 2, f"  {option} (Connected)", curses.color_pair(1))
             else:
                 stdscr.addstr(row, 2, f"  {option}")
 
+            row_offset += 1
+
         # Space between SSH and VSCode options
-        vscode_row_start = ssh_row_start + len(ssh_options) + 2
+        vscode_row_start = ssh_row_start + row_offset + 2
         stdscr.addstr(vscode_row_start - 1, 0,
                       "*VSCode projects:*", curses.A_UNDERLINE)
 
@@ -87,12 +98,15 @@ def interactive_menu(stdscr, config, active_processes):
                         0, 0, f"Disconnecting from {ssh_config['name']}...")
                     active_processes[ssh_index].terminate()
                     del active_processes[ssh_index]
+                    del active_ports[ssh_index]
                 else:
                     stdscr.addstr(
                         0, 0, f"Connecting to {ssh_config['name']}...")
                     active_process = create_ssh_tunnel_from_config(ssh_config)
                     if active_process is not None:
                         active_processes[ssh_index] = active_process
+                        active_ports[ssh_index] = [port.split(
+                            ":")[0] for port in ssh_config['ports']]
                 stdscr.refresh()
                 time.sleep(1)
             elif current_row == len(menu_options) - 1:  # Exit
