@@ -34,26 +34,10 @@ Note: `yocli` does **not support Windows**. If you are a Windows user, consider 
 
 ## Installation
 
-To install yocli as a command-line tool, follow these steps:
-
-1. Clone the repository:
+To install yocli as a command-line tool, run the following command:
 
 ```bash
-git clone https://github.com/yourusername/yocli.git
-cd yocli
-```
-
-1. Install the package using pip:
-
-```bash
-pip install .
-```
-
-1. Optionally, make the tool executable:
-
-```bash
-chmod +x yocli.py
-sudo mv yocli.py /usr/local/bin/yocli
+pip install yocli
 ```
 
 ## Configuration
@@ -65,11 +49,11 @@ services:
   vscode:
     - name: App
       commands:
-        - code ~/git/my-repo
+        - code /path/to/my-repo
 
     - name: App 2
       commands:
-        - code --remote ssh-remote+home /home/myName/git/my-repo
+        - code --remote ssh-remote+home /path/to/my-repo
 
   ssh:
     - name: home
@@ -109,9 +93,9 @@ services:
 
 yocli allows you to specify a custom configuration file using the `--config` command-line argument. If no configuration file is specified, yocli will search for a configuration file in the following default locations:
 
-1. User's config directory: ~/.config/yocli/yocli.yml
-1. Home Directory: ~/.yocli.yml
-1. Current Directory: yocli.yml
+1. User's config directory: `~/.config/yocli/yocli.yml`
+1. Home Directory: `~/.yocli.yml`
+1. Current Directory: `yocli.yml`
 
 If no configuration file is found, yocli will raise an error prompting you to provide a valid configuration file.
 
