@@ -3,9 +3,9 @@ import platform
 import signal
 import sys
 
-from yocli.menu import interactive_menu, signal_handler
+from yocli.menu import interactive_menu
 from yocli.ssh import free_ports
-from yocli.utils import get_config_path, load_yaml_config
+from yocli.utils import get_config_path, load_yaml_config, signal_handler
 
 
 def main():

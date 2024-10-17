@@ -1,5 +1,4 @@
 import curses
-import sys
 import threading
 import time
 from threading import Lock
@@ -194,13 +193,3 @@ def interactive_menu(stdscr, config, active_processes):
                 open_vscode(project['commands'])
 
         stdscr.refresh()
-
-
-def signal_handler(active_processes):
-    """Signal handler for graceful shutdown"""
-    for process in active_processes.values():
-        if process.poll() is None:
-            print("\nTerminating SSH connection...")
-            process.terminate()
-
-    sys.exit(0)
