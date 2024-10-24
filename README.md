@@ -29,6 +29,7 @@ yocli is a command-line interface (CLI) tool designed to simplify your developme
 
 - **Linux**
 - **macOS**
+- **WSL (Windows Subsystem for Linux)**
 
 Note: `yocli` does **not support Windows**. If you are a Windows user, consider running `yocli` in a **Linux-based virtual machine** or **WSL (Windows Subsystem for Linux)**.
 
@@ -170,6 +171,30 @@ Each SSH connection in the configuration file includes a list of port forwarding
 - SSH Connection Fails: Make sure that the host, user, and identity_file are correctly specified in the configuration. Check your network connectivity.
 - Ports Already in Use: If a port is already in use, modify the port forwarding rules in the configuration file to avoid conflicts.
 - VSCode Projects Not Opening: Ensure VSCode is installed and accessible from your command line (code command should work).
+
+## Local Development
+
+To run yocli locally, clone the repository and install the dependencies:
+
+```bash
+# Clone the repository
+git clone git@github.com:yoannes/yocli.git
+
+# Change to the project directory
+cd yocli
+
+# Create a virtual environment
+python3 -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Install the dependencies
+pip install -r requirements.txt
+
+# Install yocli in editable mode
+pip install -e .
+```
 
 ## License
 

@@ -51,6 +51,7 @@ def generate_options(config):
 
 
 def display_ssh_options(stdscr, active_processes, active_ports, current_row, ssh_options, ssh_row_start):
+    max_y, max_x = stdscr.getmaxyx()
     row_offset = 0
     for idx, option in enumerate(ssh_options):
         row = ssh_row_start + row_offset
@@ -58,12 +59,21 @@ def display_ssh_options(stdscr, active_processes, active_ports, current_row, ssh
             status_text = STATUS_CONNECTED
             add_styled_option(stdscr, row, option, status_text,
                               current_row, idx, active_processes)
-            # Display forwarded ports
+            # Display forwarded ports horizontally, breaking line after 5 ports
             ports = active_ports.get(idx, [])
-            for port in ports:
-                row_offset += ROW_OFFSET_INCREMENT
-                stdscr.addstr(row + row_offset,
-                              SECTION_INDENTATION + 2, f"{port}")
+            if ports:
+                ports_per_line = 5  # Number of ports per line
+                # Group the ports into chunks of 5
+                port_lines = [ports[i:i + ports_per_line]
+                              for i in range(0, len(ports), ports_per_line)]
+                for port_line in port_lines:
+                    row_offset += ROW_OFFSET_INCREMENT
+                    port_line_text = ', '.join(port_line)
+                    if row + row_offset < max_y:
+                        stdscr.addstr(row + row_offset,
+                                      SECTION_INDENTATION + 2, port_line_text)
+                    else:
+                        pass  # Handle case when there's no more space
         else:
             add_styled_option(stdscr, row, option, "",
                               current_row, idx, active_processes)
@@ -76,25 +86,40 @@ def display_ssh_options(stdscr, active_processes, active_ports, current_row, ssh
 
 
 def display_vscode_options(stdscr, current_row, vscode_options, ssh_options, ssh_row_start, row_offset):
+    max_y, max_x = stdscr.getmaxyx()
     vscode_row_start = ssh_row_start + row_offset + ROW_OFFSET_INCREMENT
-    stdscr.addstr(vscode_row_start - 1, HEADER_POSITION,
-                  "*VSCode projects:*", curses.A_UNDERLINE)
+    header_row = vscode_row_start - 1
 
+    # Check if the header row is within the screen
+    if 0 <= header_row < max_y:
+        stdscr.addstr(header_row, HEADER_POSITION,
+                      "*VSCode projects:*", curses.A_UNDERLINE)
+    else:
+        pass  # Header is off-screen; optionally handle this case
+
+    # Display the VSCode options
     for idx, project in enumerate(vscode_options):
         row = vscode_row_start + idx
-        add_styled_option(
-            stdscr, row, project[7:], "", current_row, idx + len(ssh_options), active_processes=None)
+        if 0 <= row < max_y:
+            add_styled_option(
+                stdscr, row, project[7:], "", current_row, idx + len(ssh_options), active_processes=None)
+        else:
+            pass  # Option is off-screen; optionally handle this case
 
     return vscode_row_start, row_offset
 
 
 def display_exit(stdscr, current_row, menu_options, vscode_options, vscode_row_start):
+    max_y, _ = stdscr.getmaxyx()
     exit_row = vscode_row_start + len(vscode_options) + ROW_OFFSET_INCREMENT
-    if current_row == len(menu_options) - 1:
-        stdscr.addstr(exit_row, SECTION_INDENTATION,
-                      "> Exit", curses.A_REVERSE)
+    if 0 <= exit_row < max_y:
+        if current_row == len(menu_options) - 1:
+            stdscr.addstr(exit_row, SECTION_INDENTATION,
+                          "> Exit", curses.A_REVERSE)
+        else:
+            stdscr.addstr(exit_row, SECTION_INDENTATION, "  Exit")
     else:
-        stdscr.addstr(exit_row, SECTION_INDENTATION, "  Exit")
+        pass  # Exit option is off-screen; optionally handle this case
 
 
 def connect_to_ssh_server(stdscr, ssh_configs, active_processes, active_ports, current_row):
@@ -124,12 +149,22 @@ def connect_to_ssh_server(stdscr, ssh_configs, active_processes, active_ports, c
 
 def add_styled_option(stdscr, row, option, status, current_row, idx, active_processes):
     """Add styled text for the menu options, highlighting the current row"""
-    text = f"> {option}{status}" if idx == current_row else f"  {option}{status}"
-    if idx == current_row:
-        stdscr.addstr(row, SECTION_INDENTATION, text,
-                      curses.A_REVERSE | curses.color_pair(1))
+    max_y, max_x = stdscr.getmaxyx()
+    if 0 <= row < max_y:
+        text = f"> {option}{status}" if idx == current_row else f"  {option}{status}"
+        if idx == current_row:
+            try:
+                stdscr.addstr(row, SECTION_INDENTATION, text,
+                              curses.A_REVERSE | curses.color_pair(1))
+            except curses.error:
+                pass  # Ignore errors if text doesn't fit
+        else:
+            try:
+                stdscr.addstr(row, SECTION_INDENTATION, text)
+            except curses.error:
+                pass
     else:
-        stdscr.addstr(row, SECTION_INDENTATION, text)
+        pass  # Row is off-screen; optionally handle this case
 
 
 # Main interactive menu function
